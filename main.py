@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
-from fastapi import FastAPI, Body, Query, Path
+from fastapi import FastAPI, Body, Query, Path, Form
 
 
 app = FastAPI()
@@ -19,14 +19,22 @@ class Location(BaseModel):
     country: str
     state: str
 
-
-class Person(BaseModel):
+class PersonBase(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
     age: int = Field(..., gt=0, le=115)
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = None
 
+class Person(PersonBase):
+    password: str = Field(..., min_length=8)
+
+
+class PersonOut(PersonBase):
+    pass
+
+class LoginOut(BaseModel):
+    username : str = Field(..., max_length=20, example="lautaTest")
 
 @app.get("/")
 def home():
@@ -34,7 +42,7 @@ def home():
 
 
 # request and response body
-@app.post("/person/new")
+@app.post("/person/new", response_model=PersonOut)
 def create_person(person: Person = Body(...)):
     return person
 
@@ -83,3 +91,10 @@ def update_person(
     result = person.dict()
     result.update(location.dict())
     return result
+
+@app.post(
+    path="/login",
+    response_model = LoginOut
+)
+def login(username: str = Form(...), password: str = Form(...)):
+    return LoginOut(username=username)
