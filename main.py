@@ -7,8 +7,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import EmailStr
-from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File
-
+from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File, status
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -56,7 +56,6 @@ def home():
 def create_person(person: Person = Body(...)):
     return person
 
-
 @app.get("/person/detail")
 def show_person(
     name: Optional[str] = Query(
@@ -74,6 +73,7 @@ def show_person(
 ):
     return {name: age}
 
+persons = [1,2,3,4,5]
 
 @app.get("/person/detail/{person_id}")
 def show_person(
@@ -84,6 +84,11 @@ def show_person(
         description="this is id the person"
     )
 ):
+    if person_id not in persons:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=":this person doesnt exist!"
+        )
     return {person_id: "existe"}
 
 
