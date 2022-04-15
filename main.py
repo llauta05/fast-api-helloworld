@@ -1,9 +1,13 @@
+from email.header import Header
+from email.policy import default
+from optparse import Option
 from pydoc import describe
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
-from fastapi import FastAPI, Body, Query, Path, Form
+from pydantic import EmailStr
+from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie
 
 
 app = FastAPI()
@@ -98,3 +102,27 @@ def update_person(
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOut(username=username)
+
+@app.post(
+    path="/contact"
+)
+def contact(
+    first_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1
+    ),
+    last_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1
+    ),
+    email: EmailStr = Form(...),
+    message: str = Form(
+        ...,
+        min_length=20,
+    ),
+    user_agent: Optional[str] = Header(default=None),
+    ads: Optional[str] = Cookie(default=None)
+):
+    return user_agent
