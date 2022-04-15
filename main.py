@@ -7,21 +7,24 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import EmailStr
-from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie
+from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File
 
 
 app = FastAPI()
 
+
 class HairColor(Enum):
-    white= "white"
+    white = "white"
     brown = "brown"
     black = "black"
     blonde = "blonde"
+
 
 class Location(BaseModel):
     city: str
     country: str
     state: str
+
 
 class PersonBase(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=50)
@@ -30,6 +33,7 @@ class PersonBase(BaseModel):
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = None
 
+
 class Person(PersonBase):
     password: str = Field(..., min_length=8)
 
@@ -37,8 +41,10 @@ class Person(PersonBase):
 class PersonOut(PersonBase):
     pass
 
+
 class LoginOut(BaseModel):
-    username : str = Field(..., max_length=20, example="lautaTest")
+    username: str = Field(..., max_length=20, example="lautaTest")
+
 
 @app.get("/")
 def home():
@@ -96,12 +102,14 @@ def update_person(
     result.update(location.dict())
     return result
 
+
 @app.post(
     path="/login",
-    response_model = LoginOut
+    response_model=LoginOut
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOut(username=username)
+
 
 @app.post(
     path="/contact"
@@ -126,3 +134,16 @@ def contact(
     ads: Optional[str] = Cookie(default=None)
 ):
     return user_agent
+
+
+@app.post(
+    path="/post-image"
+)
+def post_image(
+    image: UploadFile = File(...)
+):
+    return {
+        "Filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read())/1024,2)
+    }
